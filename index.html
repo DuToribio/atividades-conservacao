@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gestão de Atividades de Conservação · Ventos da Bahia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --coral:#FF5246; --coral-soft:#FFE3E0; --grafite:#4B4B4B; --areia:#EDE9E5;
+    --white:#FFFFFF; --dark:#181818; --verde:#32CAA0; --verde-soft:#DEF6ED;
+    --amber:#F2A93B; --amber-soft:#FCEBD1; --border:#E2DDD6; --muted:#928D88; --azul:#2F6FE0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--areia);font-family:'Poppins',-apple-system,Segoe UI,Roboto,sans-serif;color:var(--dark);}
+  #app{max-width:1240px;margin:0 auto;padding:16px 16px 60px;}
+
+  .header{background:var(--coral);border-radius:18px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .header-title{color:var(--white);font-weight:800;font-size:20px;}
+  .header-sub{color:rgba(255,255,255,.85);font-weight:500;font-size:11.5px;margin-top:2px;}
+  .header-brand{display:flex;flex-direction:column;align-items:center;gap:1px;flex-shrink:0;}
+  .header-brand-logo{height:22px;width:auto;display:block;}
+  .header-brand-sub{color:rgba(255,255,255,.9);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
+
+  .tabs{display:flex;background:var(--white);border:1px solid var(--border);border-radius:14px;padding:4px;margin-bottom:16px;gap:4px;}
+  .tab-btn{flex:1;padding:11px;border:none;border-radius:10px;font-weight:700;font-size:13.5px;font-family:inherit;cursor:pointer;background:transparent;color:var(--grafite);}
+  .tab-btn.active{background:var(--dark);color:var(--white);}
+
+  .card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
+  .card-title{font-size:14px;font-weight:800;color:var(--dark);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+
+  .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;}
+  .field{display:flex;flex-direction:column;gap:4px;min-width:130px;}
+  .field label{font-size:10.5px;font-weight:700;color:var(--grafite);text-transform:uppercase;letter-spacing:.02em;}
+  .input, select.input, textarea.input{padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);font-size:13px;font-family:inherit;color:var(--dark);outline:none;background:var(--white);}
+  .input:focus, select.input:focus, textarea.input:focus{border-color:var(--coral);}
+  .btn{padding:9px 16px;border:none;border-radius:9px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;}
+  .btn-primary{background:var(--coral);color:var(--white);}
+  .btn-primary:hover{background:#EF463B;}
+  .btn-ghost{background:var(--areia);color:var(--grafite);}
+  .btn-ghost:hover{background:var(--border);}
+  .btn-danger{background:var(--coral-soft);color:var(--coral);}
+  .btn-sm{padding:6px 10px;font-size:12px;border-radius:7px;}
+
+  .week-nav{display:flex;align-items:center;gap:10px;}
+  .week-nav-btn{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--border);background:var(--white);font-size:16px;font-weight:800;cursor:pointer;color:var(--grafite);}
+  .week-label{font-size:14px;font-weight:800;color:var(--dark);min-width:170px;text-align:center;}
+  .week-range{font-size:10.5px;color:var(--muted);text-align:center;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{background:var(--areia);color:var(--grafite);font-size:10px;text-transform:uppercase;letter-spacing:.03em;font-weight:800;padding:9px 8px;text-align:left;position:sticky;top:0;}
+  tbody td{padding:9px 8px;border-bottom:1px solid var(--areia);vertical-align:top;}
+  tbody tr:hover{background:#FAF8F6;}
+  .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+
+  .status-badge{display:inline-block;padding:4px 9px;border-radius:20px;font-size:10.5px;font-weight:700;white-space:nowrap;}
+  .status-Pendente{background:var(--amber-soft);color:#8a5a10;}
+  .status-Em.andamento, .status-Em_andamento{background:#E3ECFB;color:#2551A8;}
+  .status-Concluída, .status-Concluida{background:var(--verde-soft);color:#0d7a5f;}
+  .status-Cancelada{background:var(--coral-soft);color:var(--coral);}
+
+  .empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+  .empty-state .big{font-size:15px;font-weight:700;color:var(--dark);margin-bottom:4px;}
+
+  /* ---- Layout "semana lado a lado" (colunas estilo kanban) ---- */
+  .week-grid{display:flex;gap:10px;align-items:flex-start;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity;}
+  .week-grid::-webkit-scrollbar{height:6px;}
+  .week-grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
+
+  .day-block{flex:1 1 0;min-width:210px;scroll-snap-align:start;background:var(--areia);border-radius:12px;padding:10px;display:flex;flex-direction:column;}
+  .day-head{display:flex;align-items:center;gap:6px;padding:0 2px 8px;margin-bottom:0;}
+  .day-head-text{display:flex;flex-direction:column;}
+  .day-name{font-size:11.5px;font-weight:800;color:var(--dark);text-transform:uppercase;letter-spacing:.03em;line-height:1.25;}
+  .day-date{font-size:10.5px;color:var(--muted);font-weight:600;}
+  .day-count{margin-left:auto;font-size:10px;font-weight:700;color:var(--grafite);background:var(--white);padding:3px 8px;border-radius:20px;flex-shrink:0;}
+  .day-empty{font-size:11.5px;color:var(--muted);font-style:italic;padding:4px 2px 2px;}
+
+  .day-hh{padding:0 2px 9px;border-bottom:2px solid var(--border);margin-bottom:9px;}
+  .day-hh-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
+  .day-hh-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;}
+  .day-hh-value{font-size:11.5px;font-weight:800;}
+  .day-hh-track{height:6px;border-radius:5px;background:var(--white);overflow:hidden;}
+  .day-hh-fill{height:100%;border-radius:5px;transition:width .2s;}
+
+  .activity-bullet{display:flex;flex-direction:column;gap:6px;padding:9px 9px 9px 9px;border-left:3px solid var(--coral);background:var(--white);border-radius:0 9px 9px 0;margin-bottom:8px;}
+  .activity-bullet:last-child{margin-bottom:0;}
+  .activity-bullet.status-line-Concluída, .activity-bullet.status-line-Concluida{border-left-color:var(--verde);}
+  .activity-bullet.status-line-Cancelada{border-left-color:var(--muted);}
+  .activity-bullet.status-line-Em.andamento, .activity-bullet.status-line-Em_andamento{border-left-color:#2551A8;}
+  .activity-bullet-top{display:flex;gap:6px;align-items:flex-start;}
+  .activity-bullet .dot{color:var(--coral);font-size:16px;line-height:1.2;flex-shrink:0;}
+  .activity-main{flex:1;min-width:0;}
+  .activity-desc{font-size:12.5px;font-weight:700;color:var(--dark);margin-bottom:5px;line-height:1.32;max-width:100%;word-break:break-word;overflow-wrap:anywhere;}
+  .activity-id{color:var(--muted);font-weight:600;font-size:9.5px;margin-right:3px;}
+  .activity-meta{display:flex;flex-wrap:wrap;align-items:baseline;gap:0;font-size:11px;color:var(--grafite);max-width:100%;}
+  .activity-meta span{max-width:100%;word-break:break-word;overflow-wrap:anywhere;}
+  .activity-meta span:not(:last-child)::after{content:"·";margin:0 6px;color:var(--border);}
+  .activity-bullet .row-actions{flex-shrink:0;flex-direction:column;align-items:center;gap:4px;}
+  .activity-bullet .icon-row{display:flex;flex-direction:row;gap:4px;}
+  .activity-bullet .icon-btn{width:20px;height:20px;font-size:10px;border-radius:5px;}
+  .activity-bullet .status-badge{margin-top:2px;font-size:9.5px;padding:3px 7px;white-space:nowrap;}
+
+  .status-dropdown-wrap{position:relative;display:inline-block;}
+  .status-badge-btn{border:none;cursor:pointer;font-family:inherit;}
+  .status-options{position:absolute;top:100%;right:0;margin-top:5px;background:var(--white);border:1px solid var(--border);border-radius:9px;box-shadow:0 6px 16px rgba(0,0,0,.14);z-index:60;min-width:128px;overflow:hidden;}
+  .status-option{display:block;width:100%;text-align:left;padding:8px 11px;font-size:11.5px;font-weight:600;font-family:inherit;color:var(--grafite);background:var(--white);border:none;border-bottom:1px solid var(--areia);cursor:pointer;white-space:nowrap;}
+  .status-option:last-child{border-bottom:none;}
+  .status-option:hover{background:var(--areia);}
+  .status-option.active{background:var(--areia);color:var(--dark);font-weight:800;}
+
+  /* ---- Alerta: atividade sem data no Histórico ---- */
+  .sem-data-alert{background:#F1EAFB;color:#5B2FB8;border:1px solid #D8C3F5;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700;margin-bottom:10px;}
+  tr.row-sem-data{background:#F1EAFB !important;}
+  tr.row-sem-data:hover{background:#E8DCF9 !important;}
+  tr.row-sem-data td{color:#4A2A8C;}
+  .sem-data-tag{display:inline-block;font-size:10.5px;font-weight:800;color:#5B2FB8;background:#E3D4F7;padding:3px 8px;border-radius:12px;white-space:nowrap;}
+
+  @media(max-width:760px){
+    .day-block{min-width:76vw;}
+  }
+
+  /* =========================================================
+     Relatório PDF (impressão) — Programação Semanal
+  ========================================================= */
+  .print-report{display:none;}
+  .pdf-header{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:3px solid var(--coral);padding-bottom:10px;margin-bottom:14px;}
+  .pdf-title{font-size:19px;font-weight:800;color:var(--dark);}
+  .pdf-subtitle{font-size:11.5px;color:var(--grafite);margin-top:2px;}
+  .pdf-brand{font-size:10px;font-weight:700;color:var(--coral);text-transform:uppercase;letter-spacing:.04em;}
+  .pdf-kpis{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+  .pdf-kpi{flex:1;min-width:85px;border:1px solid var(--border);border-radius:9px;padding:8px 10px;font-size:10.5px;color:var(--grafite);text-align:center;}
+  .pdf-kpi b{display:block;font-size:17px;color:var(--dark);margin-bottom:1px;}
+  .pdf-day{margin-bottom:13px;break-inside:avoid;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .pdf-day-head{display:flex;justify-content:space-between;align-items:baseline;padding:7px 11px;font-size:11.5px;font-weight:800;color:var(--dark);}
+  .pdf-day-head span:last-child{font-size:10px;font-weight:700;opacity:.75;}
+  .pdf-day-empty{font-size:11px;color:var(--muted);font-style:italic;padding:7px 11px 9px;}
+  .pdf-item{display:flex;justify-content:space-between;gap:10px;padding:6px 11px;border-top:1px dotted var(--border);font-size:11px;}
+  .pdf-item-desc{font-weight:700;color:var(--dark);flex:1;}
+  .pdf-item-meta{color:var(--grafite);font-size:10.5px;white-space:nowrap;flex-shrink:0;text-align:right;}
+  .pdf-item .status-badge{font-size:9.5px;padding:2px 7px;vertical-align:middle;}
+  .pdf-footer{margin-top:20px;padding-top:8px;border-top:1px solid var(--border);font-size:9px;color:var(--muted);text-align:center;}
+
+  /* Faixa de separação dos dias — mesma cor para todos os blocos */
+  .pdf-day-head{background:var(--areia);color:var(--dark);}
+
+  @media print{
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact; }
+    body > *:not(.print-report){ display:none !important; }
+    .print-report{ display:block !important; }
+    body{ background:#fff; }
+    @page{ size:A4; margin:14mm; }
+  }
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(24,24,24,.55);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+  .modal{background:var(--white);border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--white);border-radius:16px 16px 0 0;}
+  .modal-head h3{margin:0;font-size:15px;font-weight:800;}
+  .modal-close{background:var(--areia);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:15px;color:var(--grafite);}
+  .modal-body{padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-body .full{grid-column:1/-1;}
+  .modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid var(--border);}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);color:var(--white);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:1200;opacity:0;pointer-events:none;transition:opacity .25s;}
+  .toast.show{opacity:1;}
+
+  .row-actions{display:flex;gap:6px;white-space:nowrap;}
+  .icon-btn{width:28px;height:28px;border-radius:7px;border:none;background:var(--areia);color:var(--grafite);cursor:pointer;font-size:13px;}
+  .icon-btn:hover{background:var(--border);}
+  .icon-btn.danger:hover{background:var(--coral-soft);color:var(--coral);}
+
+  .summary-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  .summary-chip{flex:1;min-width:110px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:10px 12px;}
+  .summary-chip .n{font-size:20px;font-weight:800;color:var(--dark);}
+  .summary-chip .l{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;}
+
+  @media(max-width:640px){
+    .modal-body{grid-template-columns:1fr;}
+    .filters{flex-direction:column;align-items:stretch;}
+    .field{width:100%;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="print-report" class="print-report"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script>
+/* =========================================================
+   Config / dados de referência
+========================================================= */
+const STATUS_OPTS = ["Pendente","Em andamento","Concluída","Cancelada"];
+const LOCAL_OPTS  = ["VDB 1","VDB 2","VDB 3","Outro"];
+
+/* Conexão com o Supabase — chave pública (publishable): pode ficar no código.
+   A proteção dos dados é feita pelas regras RLS no banco (002_policies.sql). */
+const SUPABASE_URL = "https://wzgzxynzbddysoezwmtl.supabase.co";
+const SUPABASE_KEY = "sb_publishable_kNh09fjupJ6lme8NrSp9Dw_cqMZjSYM";
+
+/* ---- Semana ISO 8601: retorna {year, week} a partir de uma data ---- */
+function isoWeekOf(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr + "T00:00:00");
+  if(isNaN(d)) return null;
+  const target = new Date(d.valueOf());
+  const dayNr = (d.getDay() + 6) % 7; // segunda=0 ... domingo=6
+  target.setDate(target.getDate() - dayNr + 3); // quinta-feira da semana
+  const firstThursday = new Date(target.getFullYear(), 0, 4);
+  const diff = target - firstThursday;
+  const week = 1 + Math.round(diff / (7*24*3600*1000));
+  return { year: target.getFullYear(), week };
+}
+function isoWeekLabel(dateStr){
+  const w = isoWeekOf(dateStr);
+  return w ? `${w.year}-W${String(w.week).padStart(2,"0")}` : "—";
+}
+/* Datas de início/fim (seg-dom) de uma semana ISO */
+function weekRange(year, week){
+  const simple = new Date(year, 0, 1 + (week-1)*7);
+  const dow = simple.getDay();
+  const monday = new Date(simple);
+  if(dow <= 4) monday.setDate(simple.getDate() - simple.getDay() + 1);
+  else monday.setDate(simple.getDate() + 8 - simple.getDay());
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return { monday, sunday };
+}
+function fmtDate(d){
+  return d.toLocaleDateString("pt-BR", { day:"2-digit", month:"2-digit" });
+}
+function fmtDateISO(d){
+  return d.toISOString().slice(0,10);
+}
+function fmtDateBR(iso){
+  if(!iso) return "—";
+  const [y,m,d] = iso.split("-");
+  return (y && m && d) ? `${d}/${m}/${y}` : iso;
+}
+function currentWeek(){ return isoWeekOf(new Date().toISOString().slice(0,10)); }
+
+/* =========================================================
+   Persistência
+========================================================= */
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const COLUNAS = "id,descricao,local,n_pessoas,duracao_h,data_prevista,data_realizada,status,equipe";
+
+/* Banco (snake_case, números) -> app (camelCase, strings, como na v7) */
+function fromDb(r){
+  return {
+    id: String(r.id),
+    descricao: r.descricao || "",
+    local: r.local || "",
+    nPessoas: r.n_pessoas == null ? "" : String(r.n_pessoas),
+    duracao: r.duracao_h == null ? "" : String(Number(r.duracao_h)),
+    dataPrevista: r.data_prevista || "",
+    dataRealizada: r.data_realizada || "",
+    status: r.status || "Pendente",
+    equipe: r.equipe || "",
+  };
+}
+
+/* App -> banco, com validação. Lança Error com mensagem amigável. */
+function toDb(a){
+  const nTxt = String(a.nPessoas ?? "").trim();
+  const dTxt = String(a.duracao ?? "").trim();
+  const n = nTxt === "" ? null : Number(nTxt);
+  const d = dTxt === "" ? null : parseNumero(dTxt);
+  if(n !== null && (!Number.isInteger(n) || n < 1)) throw new Error("Nº de pessoas deve ser um número inteiro a partir de 1.");
+  if(d !== null && (isNaN(d) || d <= 0 || d >= 1000)) throw new Error("Duração deve ser um número de horas maior que zero.");
+  return {
+    descricao: (a.descricao || "").trim(),
+    local: LOCAL_OPTS.includes(a.local) ? a.local : null,
+    n_pessoas: n,
+    duracao_h: d === null ? null : Math.round(d * 100) / 100,
+    data_prevista: a.dataPrevista || null,
+    data_realizada: a.dataRealizada || null,
+    status: STATUS_OPTS.includes(a.status) ? a.status : "Pendente",
+    equipe: (a.equipe || "").trim() || null,
+  };
+}
+
+/* Lista todas as atividades ativas (paginado: a API devolve no máx. 1000 por vez) */
+async function listarAtividades(){
+  const PAGINA = 1000;
+  const todas = [];
+  for(let inicio = 0; ; inicio += PAGINA){
+    const { data, error } = await db.from("atividades")
+      .select(COLUNAS).eq("excluido", false).order("id")
+      .range(inicio, inicio + PAGINA - 1);
+    if(error) throw error;
+    todas.push(...data);
+    if(data.length < PAGINA) break;
+  }
+  return todas.map(fromDb);
+}
+async function criarAtividade(linha){
+  const { data, error } = await db.from("atividades").insert(linha).select(COLUNAS).single();
+  if(error) throw error;
+  return fromDb(data);
+}
+async function atualizarAtividade(id, campos){
+  const { data, error } = await db.from("atividades").update(campos).eq("id", Number(id)).select(COLUNAS).single();
+  if(error) throw error;
+  return fromDb(data);
+}
+/* Exclusão lógica: marca excluido = true; o registro continua no banco */
+async function excluirAtividade(id){
+  const { error } = await db.from("atividades").update({ excluido: true }).eq("id", Number(id));
+  if(error) throw error;
+}
+
+function msgErro(e){
+  const m = (e && (e.message || e.error_description)) || String(e);
+  if(/Failed to fetch|NetworkError|Load failed/i.test(m)) return "sem conexão com o banco de dados.";
+  return m;
+}
+
+async function carregarDados(){
+  state.carregando = true;
+  state.erro = null;
+  render();
+  try { state.atividades = await listarAtividades(); }
+  catch(e){ state.erro = msgErro(e); }
+  finally { state.carregando = false; render(); }
+}
+
+function emptyAtividade(prefill){
+  return {
+    id: null,                    // gerado pelo banco ao salvar
+    descricao: "",
+    local: "",
+    nPessoas: "",
+    duracao: "",
+    dataPrevista: prefill?.dataPrevista || "",
+    dataRealizada: "",
+    status: "Pendente",
+    equipe: "",
+  };
+}
+
+/* =========================================================
+   Estado
+========================================================= */
+const state = {
+  tab: "semana",
+  atividades: [],
+  carregando: true,            // busca inicial no banco
+  erro: null,                  // mensagem se a carga falhar
+  salvando: false,             // evita duplo clique no Salvar
+  week: currentWeek(),         // {year, week} — semana em exibição na Página 1
+  modal: null,                 // {mode:'add'|'edit', data:{...}}
+  filtros: { texto:"", status:"", local:"", equipe:"", semana:"" },
+  openStatusId: null,          // id da atividade cujo seletor de status está aberto
+};
+
+function esc(s){
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+let toastTimer = null;
+function showToast(msg, ms = 2200){
+  let el = document.getElementById("toast");
+  if(!el){ el = document.createElement("div"); el.id="toast"; el.className="toast"; document.body.appendChild(el); }
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), ms);
+}
+
+/* =========================================================
+   Página 1 — Programação Semanal
+========================================================= */
+function atividadesDaSemana(){
+  const { year, week } = state.week;
+  return state.atividades.filter(a => {
+    const w = isoWeekOf(a.dataPrevista) || isoWeekOf(a.dataRealizada);
+    return w && w.year === year && w.week === week;
+  });
+}
+
+function statusClass(status){
+  return "status-" + status.replace(/\s+/g, "_").replace(/á/g,"a").replace(/ã/g,"a").replace(/í/g,"i");
+}
+function statusLineClass(status){
+  return "status-line-" + status.replace(/\s+/g, "_");
+}
+
+/* =========================================================
+   HH alocado (Homem-Hora) = n° de pessoas x duração, por dia
+   Meta: 32 HH/dia (valor fixo, pode virar configurável depois)
+========================================================= */
+const META_HH_DIA = 32;
+
+function parseNumero(valor){
+  const s = (valor || "").toString().trim();
+  if(!s) return NaN;
+  const m = s.match(/(\d+(?:[.,]\d+)?)/);
+  if(!m) return NaN;
+  return parseFloat(m[1].replace(",", "."));
+}
+function calcHH(a){
+  const pessoas = parseNumero(a.nPessoas);
+  const horas = parseNumero(a.duracao);
+  if(isNaN(pessoas) || isNaN(horas)) return 0;
+  return pessoas * horas;
+}
+function fmtHH(n){
+  return Number.isInteger(n) ? String(n) : n.toFixed(1).replace(".", ",");
+}
+function corHH(totalHH){
+  if(totalHH > META_HH_DIA) return "var(--azul)";   // ultrapassou a meta
+  if(totalHH === META_HH_DIA) return "var(--verde)"; // bateu a meta certinho
+  if(totalHH >= META_HH_DIA * 0.75) return "var(--amber)";
+  return "var(--coral)";
+}
+
+/* Data "de referência" de uma atividade para posicioná-la num dia da semana:
+   usa a data prevista; se não houver, cai para a data realizada. */
+function dataReferencia(a){
+  return a.dataPrevista || a.dataRealizada || "";
+}
+
+/* Formata a duração para deixar explícito que é "horas" (ex: "4" -> "4h"),
+   sem duplicar o "h" caso o usuário já tenha digitado algo como "4h" ou "4 horas". */
+function formatDuracao(duracao){
+  const d = (duracao || "").toString().trim();
+  if(!d) return "—";
+  if(/h\b|hora/i.test(d)) return d; // já tem alguma unidade escrita
+  return d.replace(".", ",") + "h";
+}
+
+function activityBulletHtml(a){
+  return `
+    <div class="activity-bullet ${statusLineClass(a.status)}">
+      <div class="activity-bullet-top">
+        <div class="dot">•</div>
+        <div class="activity-main">
+          <div class="activity-desc"><span class="activity-id">#${esc(a.id)}</span>${esc(a.descricao) || "(sem descrição)"}</div>
+          <div class="activity-meta">
+            <span>${esc(a.local) || "—"}</span>
+            <span>${esc(a.nPessoas) || "—"}</span>
+            <span>${esc(formatDuracao(a.duracao))}</span>
+            <span>${esc(a.equipe) || "—"}</span>
+          </div>
+        </div>
+        <div class="row-actions">
+          <div class="icon-row">
+            <button class="icon-btn" data-action="edit-atividade" data-id="${a.id}" title="Editar">✎</button>
+            <button class="icon-btn danger" data-action="delete-atividade" data-id="${a.id}" title="Excluir">🗑</button>
+          </div>
+          <div class="status-dropdown-wrap">
+            <button class="status-badge status-badge-btn ${statusClass(a.status)}" data-action="toggle-status-dropdown" data-id="${a.id}">${esc(a.status)}</button>
+            ${state.openStatusId === a.id ? `
+              <div class="status-options">
+                ${STATUS_OPTS.map(s => `<button class="status-option ${s===a.status?'active':''}" data-action="set-status-inline" data-id="${a.id}" data-status="${s}">${s}</button>`).join("")}
+              </div>
+            ` : ""}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   Exportação em PDF — Programação Semanal (via impressão do navegador)
+========================================================= */
+function buildPdfSemanaHtml(){
+  const { year, week } = state.week;
+  const { monday, sunday } = weekRange(year, week);
+  const lista = atividadesDaSemana();
+  const counts = STATUS_OPTS.reduce((acc,s) => { acc[s] = lista.filter(a=>a.status===s).length; return acc; }, {});
+
+  const DIAS = ["Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira"];
+
+  function pdfItemHtml(a){
+    return `
+      <div class="pdf-item">
+        <div class="pdf-item-desc">${esc(a.descricao) || "(sem descrição)"}</div>
+        <div class="pdf-item-meta">${esc(a.local)||"—"} · ${esc(a.nPessoas)||"—"} pessoas · ${esc(formatDuracao(a.duracao))} · ${esc(a.equipe)||"—"} · <span class="status-badge ${statusClass(a.status)}">${esc(a.status)}</span></div>
+      </div>
+    `;
+  }
+
+  const diasHtml = DIAS.map((nome, i) => {
+    const dia = new Date(monday);
+    dia.setDate(monday.getDate() + i);
+    const diaISO = fmtDateISO(dia);
+    const atividadesDoDia = lista
+      .filter(a => dataReferencia(a) === diaISO)
+      .sort((a,b) => (a.descricao||"").localeCompare(b.descricao||"", "pt-BR"));
+    const totalHH = atividadesDoDia.reduce((soma,a) => soma + calcHH(a), 0);
+
+    const itemsHtml = atividadesDoDia.length === 0
+      ? `<div class="pdf-day-empty">Nenhuma atividade prevista.</div>`
+      : atividadesDoDia.map(pdfItemHtml).join("");
+
+    return `
+      <div class="pdf-day">
+        <div class="pdf-day-head">
+          <span>${nome} · ${fmtDate(dia)}</span>
+          <span>${atividadesDoDia.length} ativ. · ${fmtHH(totalHH)}/${META_HH_DIA} HH</span>
+        </div>
+        ${itemsHtml}
+      </div>
+    `;
+  }).join("");
+
+  // Atividades sem data ou caindo no fim de semana desta semana ISO — listadas à parte,
+  // para não desaparecer do relatório mesmo sem um dia útil correspondente.
+  const diasIso = [0,1,2,3,4].map(i => { const dd = new Date(monday); dd.setDate(monday.getDate()+i); return fmtDateISO(dd); });
+  const fimDeSemana = lista
+    .filter(a => !diasIso.includes(dataReferencia(a)))
+    .sort((a,b) => (a.descricao||"").localeCompare(b.descricao||"", "pt-BR"));
+  const fimDeSemanaHtml = fimDeSemana.length === 0 ? "" : `
+    <div class="pdf-day">
+      <div class="pdf-day-head"><span>Sáb / Dom / sem data</span><span>${fimDeSemana.length} ativ.</span></div>
+      ${fimDeSemana.map(pdfItemHtml).join("")}
+    </div>
+  `;
+
+  return `
+    <div class="pdf-header">
+      <div>
+        <div class="pdf-brand">Serena Energia · Gestão de Ativos</div>
+        <div class="pdf-title">Programação Semanal de Atividades</div>
+        <div class="pdf-subtitle">Semana ${week} / ${year} · ${fmtDate(monday)} a ${fmtDate(sunday)}</div>
+      </div>
+    </div>
+    <div class="pdf-kpis">
+      <div class="pdf-kpi"><b>${lista.length}</b>Atividades</div>
+      ${STATUS_OPTS.map(s => `<div class="pdf-kpi"><b>${counts[s]}</b>${esc(s)}</div>`).join("")}
+    </div>
+    ${diasHtml}
+    ${fimDeSemanaHtml}
+    <div class="pdf-footer">Serena Energia · Gestão de Ativos — Gerado em ${new Date().toLocaleString("pt-BR")}</div>
+  `;
+}
+
+function generatePdfSemana(){
+  const container = document.getElementById("print-report");
+  container.innerHTML = buildPdfSemanaHtml();
+  setTimeout(() => window.print(), 80);
+}
+
+function renderSemana(){
+  const { year, week } = state.week;
+  const { monday, sunday } = weekRange(year, week);
+  const lista = atividadesDaSemana();
+
+  const counts = STATUS_OPTS.reduce((acc,s) => { acc[s] = lista.filter(a=>a.status===s).length; return acc; }, {});
+
+  // Seg a Sex: 5 dias a partir da segunda-feira da semana em exibição
+  const DIAS = ["Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira"];
+  const diasHtml = DIAS.map((nome, i) => {
+    const dia = new Date(monday);
+    dia.setDate(monday.getDate() + i);
+    const diaISO = fmtDateISO(dia);
+    const atividadesDoDia = lista
+      .filter(a => dataReferencia(a) === diaISO)
+      .sort((a,b) => (a.descricao||"").localeCompare(b.descricao||"", "pt-BR"));
+
+    const totalHH = atividadesDoDia.reduce((soma, a) => soma + calcHH(a), 0);
+    const pctHH = Math.min(100, Math.round((totalHH / META_HH_DIA) * 100));
+    const cor = corHH(totalHH);
+
+    return `
+      <div class="day-block">
+        <div class="day-head">
+          <div class="day-head-text">
+            <span class="day-name">${nome}</span>
+            <span class="day-date">${fmtDate(dia)}</span>
+          </div>
+          <span class="day-count">${atividadesDoDia.length}</span>
+          <button class="icon-btn" style="margin-left:2px;" data-action="open-add" data-prevdate="${diaISO}" title="Nova atividade neste dia">+</button>
+        </div>
+        <div class="day-hh">
+          <div class="day-hh-top">
+            <span class="day-hh-label">HH alocado</span>
+            <span class="day-hh-value" style="color:${cor}">${fmtHH(totalHH)} / ${META_HH_DIA}</span>
+          </div>
+          <div class="day-hh-track"><div class="day-hh-fill" style="width:${pctHH}%;background:${cor}"></div></div>
+        </div>
+        ${atividadesDoDia.length === 0
+          ? `<div class="day-empty">Nenhuma atividade prevista.</div>`
+          : atividadesDoDia.map(activityBulletHtml).join("")
+        }
+      </div>
+    `;
+  }).join("");
+
+  // Atividades cuja data de referência cai no sábado/domingo dessa mesma semana ISO
+  // (a semana vai de seg a dom; essas não entram nos blocos Seg-Sex acima, mas
+  // continuam contabilizadas no resumo, então são listadas à parte).
+  const fimDeSemana = lista
+    .filter(a => {
+      const ref = dataReferencia(a);
+      if(!ref) return true; // sem data definida também cai aqui, pra não sumir
+      const d = new Date(ref + "T00:00:00");
+      const refISO = fmtDateISO(d);
+      const diasIso = [0,1,2,3,4].map(i => { const dd = new Date(monday); dd.setDate(monday.getDate()+i); return fmtDateISO(dd); });
+      return !diasIso.includes(refISO);
+    })
+    .sort((a,b) => (a.descricao||"").localeCompare(b.descricao||"", "pt-BR"));
+  const fimDeSemanaHtml = fimDeSemana.length === 0 ? "" : `
+    <div class="day-block">
+      <div class="day-head">
+        <span class="day-name">Sáb / Dom / sem data</span>
+        <span class="day-count">${fimDeSemana.length}</span>
+      </div>
+      ${fimDeSemana.map(activityBulletHtml).join("")}
+    </div>
+  `;
+
+  return `
+    <div class="card">
+      <div class="card-title">📅 Filtro por semana do ano</div>
+      <div class="week-nav">
+        <button class="week-nav-btn" data-action="week-prev">‹</button>
+        <div>
+          <div class="week-label">Semana ${week} / ${year}</div>
+          <div class="week-range">${fmtDate(monday)} a ${fmtDate(sunday)}</div>
+        </div>
+        <button class="week-nav-btn" data-action="week-next">›</button>
+        <button class="btn btn-ghost btn-sm" data-action="week-today" style="margin-left:8px;">Semana atual</button>
+        <span style="flex:1"></span>
+        <input class="input" type="week" style="width:150px;" value="${year}-W${String(week).padStart(2,"0")}" data-action="week-pick" />
+      </div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-chip"><div class="n">${lista.length}</div><div class="l">Atividades</div></div>
+      ${STATUS_OPTS.map(s => `<div class="summary-chip"><div class="n">${counts[s]}</div><div class="l">${esc(s)}</div></div>`).join("")}
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>🗂️ Atividades da semana (Seg a Sex)</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" data-action="export-pdf-semana">🖨️ Exportar PDF</button>
+          <button class="btn btn-primary btn-sm" data-action="open-add" data-prevdate="${fmtDateISO(monday)}">+ Nova atividade</button>
+        </div>
+      </div>
+      <div class="week-grid">${diasHtml}</div>
+      ${fimDeSemanaHtml}
+    </div>
+  `;
+}
+
+/* =========================================================
+   Página 2 — Histórico (banco de dados completo, editável)
+========================================================= */
+function locaisDistintos(){
+  return LOCAL_OPTS.slice();
+}
+function equipesDistintas(){
+  return Array.from(new Set(state.atividades.map(a => a.equipe).filter(Boolean))).sort((a,b) => a.localeCompare(b,"pt-BR"));
+}
+function semanasDistintas(){
+  const set = new Set();
+  state.atividades.forEach(a => {
+    const w = isoWeekOf(a.dataPrevista) || isoWeekOf(a.dataRealizada);
+    if(w) set.add(`${w.year}-W${String(w.week).padStart(2,"0")}`);
+  });
+  return Array.from(set).sort();
+}
+
+/* Atividade cadastrada sem nenhuma data (nem prevista, nem realizada) —
+   precisa ser destacada no histórico para a pessoa completar depois. */
+function semDataDefinida(a){
+  return !a.dataPrevista && !a.dataRealizada;
+}
+
+function atividadesFiltradas(){
+  const f = state.filtros;
+  return state.atividades.filter(a => {
+    if(f.status && a.status !== f.status) return false;
+    if(f.local && a.local !== f.local) return false;
+    if(f.equipe && a.equipe !== f.equipe) return false;
+    if(f.semana){
+      const w = isoWeekOf(a.dataPrevista) || isoWeekOf(a.dataRealizada);
+      const label = w ? `${w.year}-W${String(w.week).padStart(2,"0")}` : "";
+      if(label !== f.semana) return false;
+    }
+    if(f.texto){
+      const t = f.texto.toLowerCase();
+      const blob = [a.descricao,a.local,a.equipe,a.status].join(" ").toLowerCase();
+      if(!blob.includes(t)) return false;
+    }
+    return true;
+  }).sort((a,b) => (b.dataPrevista||"").localeCompare(a.dataPrevista||""));
+}
+
+/* =========================================================
+   Exportação em CSV — lista filtrada do Histórico
+========================================================= */
+function csvEscape(valor){
+  const s = String(valor ?? "");
+  // Envolve em aspas se houver vírgula, aspas ou quebra de linha; "" escapa aspas internas.
+  if(/[",;\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function exportCsvHistorico(){
+  const lista = atividadesFiltradas();
+  if(lista.length === 0){ showToast("Nenhuma atividade para exportar com os filtros atuais."); return; }
+
+  const headers = ["ID","Descrição","Local","Nº pessoas","Duração (h)","Data prevista","Data realizada","Semana","Status","Equipe"];
+  const linhas = lista.map(a => {
+    const semanaLabel = isoWeekLabel(a.dataPrevista) !== "—" ? isoWeekLabel(a.dataPrevista) : isoWeekLabel(a.dataRealizada);
+    return [
+      a.id, a.descricao, a.local, a.nPessoas, String(a.duracao || "").replace(".", ","),
+      fmtDateBR(a.dataPrevista), fmtDateBR(a.dataRealizada),
+      semanaLabel, a.status, a.equipe,
+    ].map(csvEscape).join(";");
+  });
+
+  // ";" como separador (padrão do Excel em pt-BR) + BOM UTF-8 pra acentos abrirem certo.
+  const csv = "\uFEFF" + headers.map(csvEscape).join(";") + "\n" + linhas.join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dataArquivo = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `historico_atividades_${dataArquivo}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`${lista.length} atividade(s) exportada(s) ✓`);
+}
+
+function renderHistorico(){
+  const lista = atividadesFiltradas();
+  const locais = locaisDistintos();
+  const equipes = equipesDistintas();
+  const semanas = semanasDistintas();
+
+  const semData = lista.filter(semDataDefinida).length;
+
+  const rowsHtml = lista.length === 0 ? "" : lista.map(a => {
+    const semanaLabel = isoWeekLabel(a.dataPrevista) !== "—" ? isoWeekLabel(a.dataPrevista) : isoWeekLabel(a.dataRealizada);
+    const faltaData = semDataDefinida(a);
+    return `
+    <tr class="${faltaData ? 'row-sem-data' : ''}" ${faltaData ? 'title="Atividade sem data prevista nem realizada"' : ''}>
+      <td style="font-weight:700;color:${'#928D88'}">#${esc(a.id)}</td>
+      <td style="max-width:200px;">${esc(a.descricao) || "—"}</td>
+      <td>${esc(a.local) || "—"}</td>
+      <td>${esc(a.nPessoas) || "—"}</td>
+      <td>${esc(formatDuracao(a.duracao))}</td>
+      <td>${faltaData ? `<span class="sem-data-tag">⚠ Sem data</span>` : fmtDateBR(a.dataPrevista)}</td>
+      <td>${fmtDateBR(a.dataRealizada)}</td>
+      <td>${esc(semanaLabel)}</td>
+      <td><span class="status-badge ${statusClass(a.status)}">${esc(a.status)}</span></td>
+      <td>${esc(a.equipe) || "—"}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" data-action="edit-atividade" data-id="${a.id}" title="Editar">✎</button>
+          <button class="icon-btn danger" data-action="delete-atividade" data-id="${a.id}" title="Excluir">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `;
+  }).join("");
+
+  return `
+    <div class="card">
+      <div class="card-title">🔎 Filtros</div>
+      <div class="filters">
+        <div class="field" style="min-width:200px;">
+          <label>Buscar</label>
+          <input class="input" type="text" placeholder="Descrição, local, equipe..." value="${esc(state.filtros.texto)}" data-action="filter-texto" />
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select class="input" data-action="filter-status">
+            <option value="">Todos</option>
+            ${STATUS_OPTS.map(s => `<option value="${s}" ${state.filtros.status===s?"selected":""}>${s}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label>Local</label>
+          <select class="input" data-action="filter-local">
+            <option value="">Todos</option>
+            ${locais.map(l => `<option value="${esc(l)}" ${state.filtros.local===l?"selected":""}>${esc(l)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label>Equipe</label>
+          <select class="input" data-action="filter-equipe">
+            <option value="">Todas</option>
+            ${equipes.map(e => `<option value="${esc(e)}" ${state.filtros.equipe===e?"selected":""}>${esc(e)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label>Semana</label>
+          <select class="input" data-action="filter-semana">
+            <option value="">Todas</option>
+            ${semanas.map(s => `<option value="${s}" ${state.filtros.semana===s?"selected":""}>${s}</option>`).join("")}
+          </select>
+        </div>
+        <button class="btn btn-ghost" data-action="clear-filters">Limpar filtros</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>📚 Histórico de atividades (${lista.length} de ${state.atividades.length})</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" data-action="export-csv-historico" ${lista.length===0 ? "disabled" : ""}>⬇️ Exportar CSV</button>
+          <button class="btn btn-primary btn-sm" data-action="open-add">+ Nova atividade</button>
+        </div>
+      </div>
+      ${semData > 0 ? `
+        <div class="sem-data-alert">⚠ ${semData} atividade${semData>1?'s':''} sem nenhuma data preenchida — destacada${semData>1?'s':''} em roxo abaixo.</div>
+      ` : ""}
+      ${lista.length === 0 ? `
+        <div class="empty-state">
+          <div class="big">Nenhuma atividade encontrada</div>
+          <div>Ajuste os filtros ou cadastre uma nova atividade.</div>
+        </div>
+      ` : `
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>ID</th><th>Descrição</th><th>Local</th><th>Nº pessoas</th><th>Duração</th>
+              <th>Data prevista</th><th>Data realizada</th><th>Semana</th><th>Status</th><th>Equipe</th><th></th>
+            </tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+/* =========================================================
+   Modal de adicionar/editar atividade
+========================================================= */
+function renderModal(){
+  if(!state.modal) return "";
+  const a = state.modal.data;
+  const isEdit = state.modal.mode === "edit";
+  return `
+    <div class="modal-overlay" data-action="close-modal">
+      <div class="modal" data-stop="1">
+        <div class="modal-head">
+          <h3>${isEdit ? "Editar atividade" : "Nova atividade"}</h3>
+          <button class="modal-close" data-action="close-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="field full">
+            <label>Descrição</label>
+            <textarea class="input" rows="2" data-field="descricao">${esc(a.descricao)}</textarea>
+          </div>
+          <div class="field">
+            <label>Local</label>
+            <select class="input" data-field="local">
+              <option value="" ${!a.local?"selected":""}>—</option>
+              ${LOCAL_OPTS.map(l => `<option value="${l}" ${a.local===l?"selected":""}>${l}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label>Equipe</label>
+            <input class="input" type="text" value="${esc(a.equipe)}" data-field="equipe" />
+          </div>
+          <div class="field">
+            <label>Nº pessoas</label>
+            <input class="input" type="number" min="1" step="1" value="${esc(a.nPessoas)}" data-field="nPessoas" />
+          </div>
+          <div class="field">
+            <label>Duração (h)</label>
+            <input class="input" type="number" min="0.25" step="0.25" placeholder="ex: 1.5" value="${esc(a.duracao)}" data-field="duracao" />
+          </div>
+          <div class="field">
+            <label>Data prevista</label>
+            <input class="input" type="date" value="${esc(a.dataPrevista)}" data-field="dataPrevista" />
+          </div>
+          <div class="field">
+            <label>Data realizada</label>
+            <input class="input" type="date" value="${esc(a.dataRealizada)}" data-field="dataRealizada" />
+          </div>
+          <div class="field full">
+            <label>Status</label>
+            <select class="input" data-field="status">
+              ${STATUS_OPTS.map(s => `<option value="${s}" ${a.status===s?"selected":""}>${s}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" data-action="close-modal">Cancelar</button>
+          <button class="btn btn-primary" data-action="save-modal">Salvar</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   Render principal
+========================================================= */
+function renderConteudo(){
+  if(state.carregando && state.atividades.length === 0){
+    return `<div class="card"><div class="empty-state"><div class="big">Carregando atividades…</div><div>Conectando ao banco de dados.</div></div></div>`;
+  }
+  if(state.erro){
+    return `<div class="card"><div class="empty-state">
+      <div class="big">Não foi possível carregar as atividades</div>
+      <div>${esc(state.erro)}</div>
+      <div style="margin-top:14px;"><button class="btn btn-primary" data-action="recarregar">Tentar novamente</button></div>
+    </div></div>`;
+  }
+  return state.tab === "semana" ? renderSemana() : renderHistorico();
+}
+
+function render(){
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="header">
+      <div>
+        <div class="header-title">Gestão de Atividades de Conservação</div>
+        <div class="header-sub">Programação semanal e histórico completo</div>
+      </div>
+      <div class="header-brand">
+        <img class="header-brand-logo" src="data:image/png;base64,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" alt="Serena Energia" />
+        <div class="header-brand-sub">Ventos da Bahia</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn ${state.tab==='semana'?'active':''}" data-action="set-tab" data-tab="semana">📅 Programação semanal</button>
+      <button class="tab-btn ${state.tab==='historico'?'active':''}" data-action="set-tab" data-tab="historico">📚 Histórico</button>
+      <button class="btn btn-ghost btn-sm" data-action="recarregar" style="flex:0 0 auto;" title="Buscar alterações feitas por outras pessoas" ${state.carregando?"disabled":""}>${state.carregando ? "⏳ Atualizando" : "🔄 Atualizar"}</button>
+    </div>
+    <div id="content">${renderConteudo()}</div>
+    ${renderModal()}
+  `;
+  attachListeners();
+}
+
+/* =========================================================
+   Listeners
+========================================================= */
+function attachListeners(){
+  document.querySelectorAll(".modal").forEach(m => m.addEventListener("click", e => e.stopPropagation()));
+
+  document.querySelectorAll("[data-action]").forEach(el => {
+    const action = el.getAttribute("data-action");
+
+    if(action === "set-tab"){
+      el.addEventListener("click", () => { state.tab = el.getAttribute("data-tab"); render(); });
+    }
+    if(action === "week-prev"){
+      el.addEventListener("click", () => {
+        const { monday } = weekRange(state.week.year, state.week.week);
+        monday.setDate(monday.getDate() - 7);
+        state.week = isoWeekOf(fmtDateISO(monday));
+        render();
+      });
+    }
+    if(action === "week-next"){
+      el.addEventListener("click", () => {
+        const { monday } = weekRange(state.week.year, state.week.week);
+        monday.setDate(monday.getDate() + 7);
+        state.week = isoWeekOf(fmtDateISO(monday));
+        render();
+      });
+    }
+    if(action === "week-today"){
+      el.addEventListener("click", () => { state.week = currentWeek(); render(); });
+    }
+    if(action === "week-pick"){
+      el.addEventListener("change", () => {
+        const val = el.value; // formato yyyy-Www
+        const m = val.match(/^(\d{4})-W(\d{2})$/);
+        if(m) state.week = { year: parseInt(m[1],10), week: parseInt(m[2],10) };
+        render();
+      });
+    }
+    if(action === "export-pdf-semana"){
+      el.addEventListener("click", generatePdfSemana);
+    }
+    if(action === "export-csv-historico"){
+      el.addEventListener("click", exportCsvHistorico);
+    }
+    if(action === "open-add"){
+      el.addEventListener("click", () => {
+        const prevdate = el.getAttribute("data-prevdate") || "";
+        state.modal = { mode:"add", data: emptyAtividade({ dataPrevista: prevdate }) };
+        render();
+      });
+    }
+    if(action === "edit-atividade"){
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-id");
+        const a = state.atividades.find(x => x.id === id);
+        if(a) { state.modal = { mode:"edit", data: { ...a } }; render(); }
+      });
+    }
+    if(action === "recarregar"){
+      el.addEventListener("click", carregarDados);
+    }
+    if(action === "delete-atividade"){
+      el.addEventListener("click", async () => {
+        const id = el.getAttribute("data-id");
+        if(!confirm("Excluir esta atividade? Ela sai da lista, mas continua guardada no banco e pode ser recuperada.")) return;
+        try {
+          await excluirAtividade(id);
+          state.atividades = state.atividades.filter(x => x.id !== id);
+          showToast("Atividade excluída.");
+        } catch(e){
+          showToast("Erro ao excluir: " + msgErro(e), 5000);
+        }
+        render();
+      });
+    }
+    if(action === "toggle-status-dropdown"){
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = el.getAttribute("data-id");
+        state.openStatusId = state.openStatusId === id ? null : id;
+        render();
+      });
+    }
+    if(action === "set-status-inline"){
+      el.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const id = el.getAttribute("data-id");
+        const novoStatus = el.getAttribute("data-status");
+        const a = state.atividades.find(x => x.id === id);
+        state.openStatusId = null;
+        if(a && a.status !== novoStatus){
+          try {
+            Object.assign(a, await atualizarAtividade(id, { status: novoStatus }));
+            showToast("Status atualizado ✓");
+          } catch(err){
+            showToast("Erro ao atualizar status: " + msgErro(err), 5000);
+          }
+        }
+        render();
+      });
+    }
+    if(action === "close-modal"){
+      el.addEventListener("click", () => { state.modal = null; render(); });
+    }
+    if(action === "save-modal"){
+      el.addEventListener("click", async () => {
+        if(state.salvando) return;
+        const data = { ...state.modal.data };
+        document.querySelectorAll("[data-field]").forEach(f => {
+          data[f.getAttribute("data-field")] = f.value;
+        });
+        state.modal.data = data;   // preserva o que foi digitado se der erro
+        if(!data.descricao.trim()){ showToast("Informe a descrição da atividade."); return; }
+        let linha;
+        try { linha = toDb(data); } catch(e){ showToast(e.message, 4000); return; }
+
+        state.salvando = true;
+        el.disabled = true;
+        el.textContent = "Salvando…";
+        try {
+          if(data.id){
+            const atual = await atualizarAtividade(data.id, linha);
+            const idx = state.atividades.findIndex(x => x.id === data.id);
+            if(idx >= 0) state.atividades[idx] = atual; else state.atividades.push(atual);
+          } else {
+            state.atividades.push(await criarAtividade(linha));
+          }
+          state.modal = null;
+          showToast("Atividade salva ✓");
+        } catch(e){
+          showToast("Erro ao salvar: " + msgErro(e), 5000);
+        } finally {
+          state.salvando = false;
+          render();
+        }
+      });
+    }
+    // filtros do histórico
+    if(action === "filter-texto"){
+      el.addEventListener("input", () => {
+        state.filtros.texto = el.value;
+        const pos = el.selectionStart;
+        render();
+        const again = document.querySelector('[data-action="filter-texto"]');
+        if(again){ again.focus(); again.setSelectionRange(pos, pos); }
+      });
+    }
+    if(action === "filter-status"){
+      el.addEventListener("change", () => { state.filtros.status = el.value; render(); });
+    }
+    if(action === "filter-local"){
+      el.addEventListener("change", () => { state.filtros.local = el.value; render(); });
+    }
+    if(action === "filter-equipe"){
+      el.addEventListener("change", () => { state.filtros.equipe = el.value; render(); });
+    }
+    if(action === "filter-semana"){
+      el.addEventListener("change", () => { state.filtros.semana = el.value; render(); });
+    }
+    if(action === "clear-filters"){
+      el.addEventListener("click", () => { state.filtros = { texto:"", status:"", local:"", equipe:"", semana:"" }; render(); });
+    }
+  });
+}
+
+/* Fecha o seletor de status ao clicar fora dele (listener global, único) */
+document.addEventListener("click", (e) => {
+  if(state.openStatusId !== null && !e.target.closest(".status-dropdown-wrap")){
+    state.openStatusId = null;
+    render();
+  }
+});
+
+render();
+carregarDados();
+</script>
+</body>
+</html>
